@@ -148,6 +148,9 @@ window.clearPackets = function() {
 };
 
 // ── AI Log Analysis (Challenge Feature) ──────────────────────
+// Calls Vercel serverless proxy — API key stays server-side
+const PROXY_URL = 'https://log-analyzer-api-beta.vercel.app/api/analyze';
+
 window.analyzeLog = async function() {
   const logText = document.getElementById('logInput').value.trim();
   if (!logText) { alert('Paste some log content first.'); return; }
@@ -160,52 +163,24 @@ window.analyzeLog = async function() {
   btn.disabled    = true;
   btn.textContent = '⏳ Analyzing...';
   result.style.display = 'block';
-  content.textContent  = 'Sending to Claude AI...';
+  content.textContent  = 'Sending logs to Claude AI via secure proxy...';
   content.style.color  = '';
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are a network security analyst performing intrusion detection on server logs.
-Analyze the provided logs and respond in this EXACT format:
-
-THREAT SUMMARY
---------------
-[1-2 sentence overall assessment]
-
-DETECTED THREATS
-----------------
-[List each threat with: IP | Type | Evidence | Severity]
-If none: "No threats detected."
-
-RISK LEVEL: [NONE / LOW / MEDIUM / HIGH / CRITICAL]
-
-RECOMMENDED ACTIONS
--------------------
-[3-5 specific, actionable steps based on what you found]
-
-Be concise and technical. Reference actual IPs and log lines.`,
-        messages: [{ role: 'user', content: `Analyze these server logs for security threats:\n\n${logText}` }]
-      })
+      body: JSON.stringify({ logText })
     });
 
     const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+    if (!response.ok) throw new Error(data.error || 'Server error');
 
-    const text = data.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
-
-    content.textContent = text;
+    content.textContent = data.result;
     ts.textContent = new Date().toLocaleTimeString();
 
   } catch (err) {
-    content.textContent = `Error: ${err.message}\n\nNote: The AI log analysis feature requires this page to be served from a backend that proxies the Anthropic API call (to keep the API key server-side). For the demo, paste logs and the analysis structure is shown above.`;
+    content.textContent = `Error: ${err.message}`;
     content.style.color = '#f85149';
   } finally {
     btn.disabled    = false;
