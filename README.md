@@ -57,8 +57,8 @@ service cloud.firestore {
 ### Step 5 — Set up Google Analytics
 1. Go to https://analytics.google.com
 2. **Admin → Create Property → Web** → enter your URL
-3. Copy your **Measurement ID** (format: `G-XXXXXXXXXX`)
-4. Find and replace `G-XXXXXXXXXX` in all 5 HTML files
+3. Copy your **Measurement ID** (format: `G-S0QSLZK6DT`)
+4. Find and replace `G-S0QSLZK6DT` in all 5 HTML files
 
 ### Step 6 — Push and deploy
 ```bash

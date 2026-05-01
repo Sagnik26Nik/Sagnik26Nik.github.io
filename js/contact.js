@@ -18,12 +18,13 @@ import { getFirestore, collection, addDoc, serverTimestamp }
 //   → Your Project → Project Settings → Your apps → Web
 // ─────────────────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey:            "AIzaSyD0s99teY8Gi-0TZgStK1kKfa2doO9FKTQ",
+  authDomain:        "portfolio-b7d08.firebaseapp.com",
+  projectId:         "portfolio-b7d08",
+  storageBucket:     "portfolio-b7d08.firebasestorage.app",
+  messagingSenderId: "539847861677",
+  appId:             "1:539847861677:web:13b243c2654ca3c8c4ad24",
+  measurementId:     "G-S0QSLZK6DT"
 };
 
 const app = initializeApp(firebaseConfig);
