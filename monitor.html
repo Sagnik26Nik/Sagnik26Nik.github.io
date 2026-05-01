@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor — CN Project 2</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google-analytics.com https://api.anthropic.com;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔐 SecureNet</a>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <ul class="nav-menu" id="navMenu" role="list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="networking.html" class="nav-link">Networking</a></li>
+        <li><a href="security.html" class="nav-link">Security</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="monitor.html" class="nav-link active">Monitor</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>Traffic Monitor</h1>
+      <p>Google Analytics · Wireshark-style packet log · Prometheus metrics · AI intrusion detection.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem; padding-bottom:4rem;">
+
+    <!-- =====================================================
+         MONITORING 1: Google Analytics explanation
+    ====================================================== -->
+    <div class="sec-block">
+      <h2>📊 Google Analytics</h2>
+      <span class="badge badge-green">✅ Active on all pages</span>
+      <p style="margin-top:.75rem;">
+        Google Analytics tracks pageviews, session duration, referrer sources, and
+        device types. IP anonymization is enabled (<code>anonymize_ip: true</code>).
+        The tracking script is loaded asynchronously — it never blocks page rendering.
+      </p>
+      <div class="code-block">
+        <div class="code-label">index.html — GA4 snippet (on every page)</div>
+<pre>&lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', {
+    anonymize_ip: true      // GDPR-friendly
+  });
+&lt;/script&gt;
+
+&lt;!-- Replace G-XXXXXXXXXX with your Measurement ID from:
+     analytics.google.com → Admin → Data Streams → Web --&gt;</pre>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         MONITORING 2: Live metrics
+    ====================================================== -->
+    <div class="sec-block">
+      <h2>📈 Live Traffic Metrics</h2>
+      <p>Simulated real-time metrics refreshing every 2 seconds. In production
+      these would come from Prometheus / Netdata scrapers.</p>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="mRequests">847</div>
+          <div class="metric-label">Requests / min</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="mBlocked">12</div>
+          <div class="metric-label">Threats Blocked</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="mLatency">38ms</div>
+          <div class="metric-label">Avg Latency</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="mUnique">143</div>
+          <div class="metric-label">Unique IPs Today</div>
+        </div>
+      </div>
+
+      <!-- Canvas chart -->
+      <div class="chart-wrap">
+        <div class="chart-title">Request Volume — Last 60 Seconds</div>
+        <canvas id="trafficCanvas" height="160" aria-label="Traffic chart"></canvas>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         MONITORING 3: Wireshark-style packet log
+    ====================================================== -->
+    <div class="sec-block">
+      <h2>🦈 Wireshark — Packet Capture Simulation</h2>
+      <p>Simulates what Wireshark shows when capturing traffic to this server.
+      Green = HTTPS, Yellow = DNS, Red = detected threat.</p>
+
+      <div class="packet-toolbar">
+        <button class="btn btn-primary btn-sm" id="captureBtn" onclick="toggleCapture()">▶ Start Capture</button>
+        <button class="btn btn-outline btn-sm" onclick="clearPackets()">Clear</button>
+        <span class="packet-count">Packets captured: <span id="pktCount">0</span></span>
+      </div>
+
+      <div class="packet-wrap">
+        <table class="packet-table" role="grid" aria-label="Packet capture log">
+          <thead>
+            <tr>
+              <th>#</th><th>Time</th><th>Source</th><th>Destination</th>
+              <th>Protocol</th><th>Length</th><th>Info</th>
+            </tr>
+          </thead>
+          <tbody id="packetBody">
+            <tr><td colspan="7" class="pkt-empty">Press Start Capture to begin</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         MONITORING 4: Prometheus metrics
+    ====================================================== -->
+    <div class="sec-block">
+      <h2>📡 Prometheus-style Metrics</h2>
+      <p>In production, a <code>/metrics</code> endpoint exports these counters and
+      histograms. Prometheus scrapes every 15s; Grafana visualizes them.</p>
+      <div class="code-block">
+        <div class="code-label">/metrics — Prometheus exposition format</div>
+<pre id="prometheusOutput"># HELP http_requests_total Total HTTP requests received
+# TYPE http_requests_total counter
+http_requests_total{method="GET",status="200"} 1247
+http_requests_total{method="POST",status="200"} 89
+http_requests_total{method="POST",status="429"} 12
+http_requests_total{method="GET",status="404"} 34
+
+# HELP response_latency_seconds HTTP response latency
+# TYPE response_latency_seconds histogram
+response_latency_seconds_bucket{le="0.05"} 890
+response_latency_seconds_bucket{le="0.1"}  1100
+response_latency_seconds_bucket{le="0.5"}  1350
+response_latency_seconds_sum 62.4
+response_latency_seconds_count 1370
+
+# HELP security_threats_blocked Blocked security threats
+# TYPE security_threats_blocked counter
+security_threats_blocked{type="xss"}          3
+security_threats_blocked{type="sqli"}         7
+security_threats_blocked{type="brute_force"}  2
+security_threats_blocked{type="csrf"}         1</pre>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         MONITORING 5: AI Log Analysis (CHALLENGE FEATURE)
+    ====================================================== -->
+    <div class="sec-block" id="ai">
+      <h2>🤖 AI Intrusion Detection <span class="badge badge-purple">Challenge Feature</span></h2>
+      <p>
+        Paste server access logs below. Claude AI analyzes them for brute-force attempts,
+        SQL injection probes, XSS patterns, port scans, and unusual traffic spikes.
+        This is the <strong>"AI-based log monitoring"</strong> required by the challenge.
+      </p>
+
+      <textarea id="logInput" class="log-textarea" rows="12"
+        placeholder="Paste your server access logs here...
+
+Example:
+192.168.1.100 - - [30/Apr/2026:14:23:01] &quot;GET / HTTP/1.1&quot; 200 1234
+10.0.0.5 - - [30/Apr/2026:14:23:02] &quot;POST /login HTTP/1.1&quot; 401 432
+10.0.0.5 - - [30/Apr/2026:14:23:03] &quot;POST /login HTTP/1.1&quot; 401 432
+10.0.0.5 - - [30/Apr/2026:14:23:04] &quot;POST /login HTTP/1.1&quot; 401 432
+203.0.113.42 - - [30/Apr/2026:14:24:10] &quot;GET /?id=1 OR 1=1 HTTP/1.1&quot; 403 0
+203.0.113.42 - - [30/Apr/2026:14:24:11] &quot;GET /?id=1 UNION SELECT * FROM users HTTP/1.1&quot; 403 0"></textarea>
+
+      <div class="ai-controls">
+        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeLog()">
+          🔍 Analyze with AI
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="loadSample()">Load Sample Logs</button>
+      </div>
+
+      <div id="aiResult" class="ai-result" style="display:none;">
+        <div class="ai-result-header">
+          <span>🤖 AI Security Analysis</span>
+          <span id="aiTimestamp"></span>
+        </div>
+        <div id="aiContent" class="ai-result-body"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>Computer Networking Project 2 · Spring 2026 · Georgia State University</p>
+  </footer>
+
+  <script src="js/monitor.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

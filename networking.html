@@ -1,33 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Networking Concepts</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Networking Concepts — CN Project 2</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google-analytics.com;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="networking.html">Networking Concepts</a>
+
+  <nav class="navbar" role="navigation">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔐 SecureNet</a>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <ul class="nav-menu" id="navMenu" role="list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="networking.html" class="nav-link active">Networking</a></li>
+        <li><a href="security.html" class="nav-link">Security</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="monitor.html" class="nav-link">Monitor</a></li>
+      </ul>
+    </div>
   </nav>
-  <main>
-    <h1>Networking Concepts</h1>
 
-    <h2>DNS Resolution</h2>
-    <p>DNS (Domain Name System) translates our domain <strong>username.github.io</strong>
-    into an IP address. Run <code>nslookup username.github.io</code> to see this in action.</p>
+  <div class="page-header">
+    <div class="container">
+      <h1>Networking Concepts</h1>
+      <p>DNS, HTTPS, IPv4/IPv6, CDN, TLS — the infrastructure powering this site.</p>
+    </div>
+  </div>
 
-    <h2>IP Addressing</h2>
-    <p>Our site resolves to both an IPv4 (e.g., 185.199.108.153) and IPv6 address.
-    GitHub Pages uses Fastly's CDN, so the IP may vary by location.</p>
+  <div class="container" style="padding-top:2rem; padding-bottom:4rem;">
 
-    <h2>HTTP vs HTTPS</h2>
-    <p>Our site enforces HTTPS. HTTP traffic is automatically redirected.
-    HTTPS uses TLS encryption to protect data in transit.</p>
+    <!-- DNS -->
+    <div class="sec-block">
+      <h2>🌐 DNS Resolution</h2>
+      <p>DNS translates <code>sagnik26nik.github.io</code> into an IP address.
+      GitHub Pages routes through <strong>Fastly's anycast CDN</strong> — the IP you
+      get depends on your geographic location, minimizing latency worldwide.</p>
 
-    <h2>Security Headers</h2>
-    <p>GitHub Pages automatically serves security headers including
-    <code>Strict-Transport-Security</code> which enforces HTTPS.</p>
-  </main>
+      <div class="code-block">
+        <div class="code-label">Terminal — DNS lookup commands</div>
+<pre># Look up IPv4 address
+nslookup sagnik26nik.github.io
+# → 185.199.108.153 (Fastly CDN node)
+
+# Look up IPv6 address
+nslookup -type=AAAA sagnik26nik.github.io
+# → 2606:50c0:8000::153
+
+# Full DNS trace
+nslookup -debug sagnik26nik.github.io
+
+# Trace the network path
+tracert sagnik26nik.github.io       (Windows)
+traceroute sagnik26nik.github.io    (Mac/Linux)</pre>
+      </div>
+
+      <div class="concept-flow">
+        <div class="flow-step">Your Browser</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Local DNS Cache</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">ISP Resolver</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Root Nameserver</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">github.io NS</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">185.199.108.153</div>
+      </div>
+    </div>
+
+    <!-- IPv4 vs IPv6 -->
+    <div class="sec-block">
+      <h2>📡 IPv4 vs IPv6 — Dual Stack</h2>
+      <p>This site supports both protocols simultaneously.
+      IPv4 uses 32-bit addresses (≈4.3B total, nearly exhausted).
+      IPv6 uses 128-bit addresses — practically unlimited.
+      GitHub Pages / Fastly handles dual-stack routing automatically.</p>
+
+      <div class="two-col">
+        <div class="compare-card compare-neutral">
+          <h4>IPv4</h4>
+          <code>185.199.108.153</code>
+          <ul>
+            <li>32-bit address</li>
+            <li>~4.3B addresses</li>
+            <li>NAT required</li>
+            <li>Since 1983</li>
+          </ul>
+        </div>
+        <div class="compare-card compare-good">
+          <h4>IPv6</h4>
+          <code>2606:50c0:8000::153</code>
+          <ul>
+            <li>128-bit address</li>
+            <li>340 undecillion addresses</li>
+            <li>No NAT needed</li>
+            <li>Built-in IPSec</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top:1rem;">
+        <div class="code-label">Test IPv6 connectivity</div>
+<pre>ping -6 sagnik26nik.github.io        (Windows)
+ping6 sagnik26nik.github.io          (Mac/Linux)
+
+# Check if your connection supports IPv6
+curl -6 https://sagnik26nik.github.io -I</pre>
+      </div>
+    </div>
+
+    <!-- HTTP vs HTTPS -->
+    <div class="sec-block">
+      <h2>🔐 HTTP vs HTTPS</h2>
+      <p>HTTP sends data as plaintext — anyone on the network can intercept it.
+      HTTPS wraps HTTP in <strong>TLS (Transport Layer Security)</strong>, encrypting
+      all data. GitHub Pages enforces HTTPS with a permanent 301 redirect from HTTP.</p>
+
+      <div class="two-col">
+        <div class="compare-card compare-bad">
+          <h4>❌ HTTP</h4>
+          <ul>
+            <li>Port 80</li>
+            <li>Plaintext — readable</li>
+            <li>No verification</li>
+            <li>Susceptible to MITM</li>
+            <li>No data integrity</li>
+          </ul>
+        </div>
+        <div class="compare-card compare-good">
+          <h4>✅ HTTPS (this site)</h4>
+          <ul>
+            <li>Port 443</li>
+            <li>TLS 1.3 encrypted</li>
+            <li>Certificate verified</li>
+            <li>MITM-resistant</li>
+            <li>Integrity guaranteed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CDN -->
+    <div class="sec-block">
+      <h2>⚡ CDN — Content Delivery Network</h2>
+      <p>A CDN distributes copies of your site across global <strong>edge nodes</strong>.
+      Requests are served from the nearest node instead of a single origin server —
+      dramatically reducing latency. This site uses:</p>
+      <ul style="margin:.75rem 0 .75rem 1.5rem; color:var(--text-dim);">
+        <li><strong>Fastly CDN</strong> — built into GitHub Pages, handles IPv4/IPv6</li>
+        <li><strong>Cloudflare (optional)</strong> — additional DDoS protection + caching</li>
+        <li><strong>cdnjs.cloudflare.com</strong> — DOMPurify library served from CDN edge</li>
+      </ul>
+
+      <div class="cdn-diagram">
+        <div class="cdn-origin">Origin<br/><small>GitHub</small></div>
+        <div class="cdn-spokes">
+          <div class="cdn-edge">🇺🇸 Atlanta</div>
+          <div class="cdn-edge">🇬🇧 London</div>
+          <div class="cdn-edge">🇯🇵 Tokyo</div>
+          <div class="cdn-edge">🇧🇷 São Paulo</div>
+          <div class="cdn-edge">🇦🇺 Sydney</div>
+          <div class="cdn-edge">🇸🇬 Singapore</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lazy Loading -->
+    <div class="sec-block">
+      <h2>🖼️ Lazy Loading</h2>
+      <p>Images below the viewport are not loaded until the user scrolls near them.
+      This reduces initial page weight and improves <strong>Time to First Contentful Paint (FCP)</strong>.
+      We use both the native <code>loading="lazy"</code> attribute and an
+      Intersection Observer for maximum browser compatibility.</p>
+
+      <div class="code-block">
+        <div class="code-label">HTML — native lazy loading</div>
+<pre>&lt;!-- Native browser lazy loading (Chrome, Firefox, Edge, Safari) --&gt;
+&lt;img src="image.jpg"
+     loading="lazy"
+     alt="Description"
+     width="800" height="600" /&gt;</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">js/main.js — Intersection Observer fallback</div>
+<pre>// Handles older browsers that don't support loading="lazy"
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;      // swap in real src
+      observer.unobserve(img);        // stop watching
+    }
+  });
+}, { rootMargin: '200px' });         // start 200px before viewport
+
+// Apply to all lazy images
+document.querySelectorAll('img[data-src]').forEach(img => {
+  observer.observe(img);
+});</pre>
+      </div>
+
+      <!-- Lazy loading demo images -->
+      <p style="margin-top:1rem; color:var(--text-dim);">
+        Scroll down — these images load on demand (check Network tab in DevTools):
+      </p>
+      <div class="lazy-demo-grid">
+        <img data-src="https://picsum.photos/seed/net1/400/250"
+             src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+             loading="lazy" alt="Network diagram example 1" width="400" height="250"
+             class="lazy-img" />
+        <img data-src="https://picsum.photos/seed/net2/400/250"
+             src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+             loading="lazy" alt="Network diagram example 2" width="400" height="250"
+             class="lazy-img" />
+        <img data-src="https://picsum.photos/seed/net3/400/250"
+             src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+             loading="lazy" alt="Network diagram example 3" width="400" height="250"
+             class="lazy-img" />
+      </div>
+    </div>
+
+    <!-- Minification -->
+    <div class="sec-block">
+      <h2>🗜️ CSS &amp; JS Minification</h2>
+      <p>The GitHub Actions pipeline automatically minifies all CSS and JS files before
+      deploying. This removes whitespace, comments, and shortens variable names —
+      typically reducing file sizes by 60–75%.</p>
+
+      <div class="code-block">
+        <div class="code-label">.github/workflows/deploy.yml — minification step</div>
+<pre>- name: Minify CSS and JS
+  run: |
+    npm install -g clean-css-cli uglify-js
+
+    # Minify CSS
+    cleancss -o css/style.min.css css/style.css
+    echo "CSS: $(wc -c &lt; css/style.css) → $(wc -c &lt; css/style.min.css) bytes"
+
+    # Minify JS
+    for f in js/main.js js/security.js js/monitor.js; do
+      uglifyjs "$f" -o "${f%.js}.min.js" -c -m
+      echo "JS: $f minified"
+    done</pre>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>Computer Networking Project 2 · Spring 2026 · Georgia State University</p>
+  </footer>
+
+  <script src="js/main.js"></script>
 </body>
 </html>

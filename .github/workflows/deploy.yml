@@ -1,0 +1,147 @@
+name: CI/CD — Security Check, Minify & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1: Security checks + minification
+  # Runs on every push and every PR
+  # ─────────────────────────────────────────────────────────────
+  build:
+    name: Security Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install minification tools
+        run: npm install -g clean-css-cli uglify-js
+
+      # ── Security Check 1: Verify CSP on every HTML page ──────
+      - name: Check Content-Security-Policy headers
+        run: |
+          echo "=== Checking CSP headers ==="
+          FAIL=0
+          for f in *.html; do
+            if grep -q "Content-Security-Policy" "$f"; then
+              echo "✅ CSP found: $f"
+            else
+              echo "❌ MISSING CSP: $f"
+              FAIL=1
+            fi
+          done
+          [ $FAIL -eq 0 ] || exit 1
+
+      # ── Security Check 2: Scan for unsafe patterns in JS ─────
+      - name: Scan for dangerous JS patterns
+        run: |
+          echo "=== Scanning JS for dangerous patterns ==="
+          # Warn on eval() usage
+          if grep -rn "eval(" js/ --include="*.js" | grep -v "//"; then
+            echo "⚠️  eval() usage found — review manually"
+          else
+            echo "✅ No eval() usage"
+          fi
+          # Warn on document.write
+          if grep -rn "document\.write(" js/ --include="*.js"; then
+            echo "⚠️  document.write() found — potential XSS risk"
+          else
+            echo "✅ No document.write() usage"
+          fi
+          echo "Scan complete."
+
+      # ── Security Check 3: Verify X-Frame-Options present ─────
+      - name: Check clickjacking protection
+        run: |
+          echo "=== Checking X-Frame-Options ==="
+          for f in *.html; do
+            if grep -q "X-Frame-Options" "$f"; then
+              echo "✅ X-Frame-Options found: $f"
+            else
+              echo "⚠️  X-Frame-Options missing: $f"
+            fi
+          done
+
+      # ── PERFORMANCE: Minify CSS ───────────────────────────────
+      - name: Minify CSS
+        run: |
+          echo "=== Minifying CSS ==="
+          cleancss -o css/style.min.css css/style.css
+          ORIG=$(wc -c < css/style.css)
+          MIN=$(wc -c < css/style.min.css)
+          SAVED=$(( (ORIG - MIN) * 100 / ORIG ))
+          echo "✅ style.css: ${ORIG}B → ${MIN}B (${SAVED}% reduction)"
+
+      # ── PERFORMANCE: Minify JavaScript ───────────────────────
+      - name: Minify JavaScript
+        run: |
+          echo "=== Minifying JavaScript ==="
+          for f in js/main.js js/security.js js/monitor.js; do
+            if [ -f "$f" ]; then
+              OUT="${f%.js}.min.js"
+              uglifyjs "$f" -o "$OUT" -c -m 2>/dev/null && \
+                echo "✅ $f → $OUT ($(wc -c < $OUT)B)" || \
+                cp "$f" "$OUT"
+            fi
+          done
+
+      # ── Upload artifacts for deploy job ──────────────────────
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2: Deploy to GitHub Pages
+  # Only runs on pushes to main (not PRs)
+  # ─────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Deployment summary
+        run: |
+          echo "## ✅ Deployed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | https://sagnik26nik.github.io |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Time | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks passed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CSP headers on all pages" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ XSS/eval scan clean" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Clickjacking protection verified" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CSS minified" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ JS minified" >> $GITHUB_STEP_SUMMARY

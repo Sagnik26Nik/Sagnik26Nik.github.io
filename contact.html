@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — CN Project 2</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://firestore.googleapis.com https://www.google-analytics.com;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔐 SecureNet</a>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <ul class="nav-menu" id="navMenu" role="list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="networking.html" class="nav-link">Networking</a></li>
+        <li><a href="security.html" class="nav-link">Security</a></li>
+        <li><a href="contact.html" class="nav-link active">Contact</a></li>
+        <li><a href="monitor.html" class="nav-link">Monitor</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>Contact Form</h1>
+      <p>Demonstrates Firebase Firestore + full security pipeline: CSRF → validation → DOMPurify → rate limiting → database.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem; padding-bottom:4rem;">
+    <div class="contact-layout">
+
+      <!-- FORM -->
+      <div class="contact-form-col">
+
+        <!-- Security indicator strip -->
+        <div class="security-strip">
+          <span class="si si-on">🔒 HTTPS</span>
+          <span class="si si-on">🛡️ CSRF Token</span>
+          <span class="si si-on">🧹 XSS Sanitized</span>
+          <span class="si si-on">⏱️ Rate Limited (3/5min)</span>
+          <span class="si si-on">🔥 Firebase Firestore</span>
+        </div>
+
+        <form id="contactForm" novalidate>
+          <!-- CSRF token injected by main.js -->
+          <input type="hidden" name="_csrf" id="csrfToken" />
+
+          <div class="form-group">
+            <label for="fname">Name <span class="required">*</span></label>
+            <input type="text" id="fname" name="name"
+              required minlength="2" maxlength="100"
+              autocomplete="name" placeholder="Your full name"
+              aria-required="true" />
+            <span class="field-error" id="fname-err"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="femail">Email <span class="required">*</span></label>
+            <input type="email" id="femail" name="email"
+              required maxlength="254"
+              autocomplete="email" placeholder="you@email.com"
+              aria-required="true" />
+            <span class="field-error" id="femail-err"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="fsubject">Subject</label>
+            <input type="text" id="fsubject" name="subject"
+              maxlength="200" placeholder="What's this about?" />
+          </div>
+
+          <div class="form-group">
+            <label for="fmessage">Message <span class="required">*</span></label>
+            <textarea id="fmessage" name="message"
+              required minlength="10" maxlength="2000"
+              rows="6" placeholder="Your message..."
+              aria-required="true"></textarea>
+            <div class="char-row">
+              <span class="field-error" id="fmessage-err"></span>
+              <span class="char-count"><span id="charCount">0</span>/2000</span>
+            </div>
+          </div>
+
+          <div id="formGlobalError" class="form-msg form-msg-error" role="alert" style="display:none;"></div>
+          <div id="formSuccess" class="form-msg form-msg-success" role="status" style="display:none;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+            Send Message
+          </button>
+
+          <p class="form-note">
+            Inputs are sanitized with DOMPurify before storage.
+            Rate limit: 3 submissions per 5 minutes.
+          </p>
+        </form>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="contact-sidebar">
+        <h3>Security Pipeline</h3>
+        <ol class="pipeline-steps">
+          <li>
+            <strong>CSRF Validation</strong>
+            <p>Token generated on page load via <code>crypto.randomUUID()</code>.
+            Validated against sessionStorage before any processing.</p>
+          </li>
+          <li>
+            <strong>Client Validation</strong>
+            <p>Required fields, length limits, email format — checked before any
+            data leaves the browser.</p>
+          </li>
+          <li>
+            <strong>XSS Sanitization</strong>
+            <p>DOMPurify strips all HTML tags and attributes from every field
+            before it touches the database.</p>
+          </li>
+          <li>
+            <strong>Rate Limiting</strong>
+            <p>Max 3 submissions per 5-minute window. Prevents spam and
+            automated form abuse.</p>
+          </li>
+          <li>
+            <strong>Firebase Firestore</strong>
+            <p>Sanitized data stored in Firestore with server-side security rules
+            that restrict read access.</p>
+          </li>
+        </ol>
+
+        <div class="setup-note">
+          <strong>⚙️ Setup required:</strong>
+          <p>Replace the Firebase config values in
+          <code>js/contact.js</code> with your own project credentials
+          from the Firebase Console (free tier).</p>
+          <a href="https://console.firebase.google.com" target="_blank" rel="noopener"
+             class="btn btn-outline btn-sm" style="margin-top:.75rem; display:inline-block;">
+            Open Firebase Console →
+          </a>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Computer Networking Project 2 · Spring 2026 · Georgia State University</p>
+  </footer>
+
+  <!-- Firebase SDK (ES module) -->
+  <script type="module" src="js/contact.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

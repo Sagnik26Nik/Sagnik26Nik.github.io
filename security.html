@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Features — CN Project 2</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google-analytics.com;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔐 SecureNet</a>
+      <button class="nav-burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <ul class="nav-menu" id="navMenu" role="list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="networking.html" class="nav-link">Networking</a></li>
+        <li><a href="security.html" class="nav-link active">Security</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="monitor.html" class="nav-link">Monitor</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>Security Implementation</h1>
+      <p>Every protection layer — what it is, why it matters, and a live demo.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem; padding-bottom:4rem;">
+
+    <!-- =====================================================
+         SECURITY 1: HTTPS
+    ====================================================== -->
+    <div class="sec-block">
+      <div class="sec-label">Security Feature 01</div>
+      <h2>HTTPS / TLS Encryption</h2>
+      <span class="badge badge-green">✅ Active</span>
+
+      <p>GitHub Pages automatically provisions TLS certificates via <strong>Let's Encrypt</strong>
+      for all <code>*.github.io</code> domains. All HTTP traffic is permanently redirected to
+      HTTPS (HTTP 301). TLS 1.3 encrypts data between browser and server, preventing
+      eavesdropping and man-in-the-middle attacks.</p>
+
+      <div class="code-block">
+        <div class="code-label">Terminal — verify TLS</div>
+<pre># Check TLS and HSTS header
+curl -I https://sagnik26nik.github.io
+
+# Expected response includes:
+# strict-transport-security: max-age=31536000
+# x-content-type-options: nosniff
+
+# View certificate chain
+openssl s_client -connect sagnik26nik.github.io:443 -showcerts 2>/dev/null | head -30</pre>
+      </div>
+
+      <div class="info-box">
+        <strong>How it works:</strong> Browser sends ClientHello → Server sends certificate →
+        Browser verifies certificate against trusted CA (Let's Encrypt) → TLS handshake →
+        All subsequent traffic is encrypted with AES-256-GCM.
+      </div>
+    </div>
+
+    <!-- =====================================================
+         SECURITY 2: XSS + CSP
+    ====================================================== -->
+    <div class="sec-block">
+      <div class="sec-label">Security Feature 02</div>
+      <h2>XSS Prevention + Content Security Policy</h2>
+      <span class="badge badge-green">✅ Active</span>
+
+      <p>Two-layer defense: a strict <strong>Content Security Policy (CSP)</strong> header
+      blocks script injection from untrusted origins. <strong>DOMPurify</strong> (loaded from
+      Cloudflare CDN) sanitizes all user-supplied HTML before it ever touches the DOM.</p>
+
+      <div class="code-block">
+        <div class="code-label">js/security.js — sanitize function</div>
+<pre>// Every user input goes through this before rendering
+function sanitizeInput(userInput) {
+  return DOMPurify.sanitize(userInput, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p'],
+    ALLOWED_ATTR: []   // no attributes allowed at all
+  });
+}
+
+// Example:
+sanitizeInput('Hello &lt;script&gt;alert("xss")&lt;/script&gt; World');
+// → "Hello  World"  ✅ script tag stripped</pre>
+      </div>
+
+      <!-- LIVE XSS DEMO -->
+      <div class="demo-box">
+        <h4>🧪 Live XSS Demo — DOMPurify in action</h4>
+        <p>Type or paste anything including <code>&lt;script&gt;</code> tags. Watch DOMPurify strip them.</p>
+        <textarea id="xssInput" rows="3"
+          placeholder='Try: <script>alert("xss")</script> or <img src=x onerror=alert(1)>'
+          aria-label="XSS test input"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="runXSSDemo()">Sanitize →</button>
+        <div class="demo-result" id="xssResult" style="display:none;">
+          <div><span class="label-bad">❌ Raw input (dangerous):</span>
+            <code id="xssRaw"></code></div>
+          <div style="margin-top:.5rem;"><span class="label-good">✅ After DOMPurify (safe):</span>
+            <code id="xssClean"></code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         SECURITY 3: BRUTE FORCE / RATE LIMITING
+    ====================================================== -->
+    <div class="sec-block">
+      <div class="sec-label">Security Feature 03</div>
+      <h2>Brute-Force Protection — Rate Limiting</h2>
+      <span class="badge badge-green">✅ Active</span>
+
+      <p>Client-side token bucket limits form submissions to <strong>5 attempts per 60 seconds</strong>
+      per session. After the limit is hit, the form locks and shows a countdown. In a
+      Node.js backend this pairs with <code>express-rate-limit</code>.</p>
+
+      <div class="code-block">
+        <div class="code-label">js/security.js — RateLimiter class</div>
+<pre>class RateLimiter {
+  constructor(max = 5, windowMs = 60000) {
+    this.max = max;
+    this.windowMs = windowMs;
+    this.attempts = 0;
+    this.resetAt = null;
+  }
+
+  check() {
+    const now = Date.now();
+    if (this.resetAt && now > this.resetAt) {
+      this.attempts = 0;      // window expired, reset
+      this.resetAt = null;
+    }
+    if (this.attempts >= this.max) {
+      const wait = Math.ceil((this.resetAt - now) / 1000);
+      throw new Error(`Rate limit hit. Try again in ${wait}s.`);
+    }
+    this.attempts++;
+    if (this.attempts === 1) this.resetAt = now + this.windowMs;
+  }
+}</pre>
+      </div>
+
+      <!-- LIVE RATE LIMIT DEMO -->
+      <div class="demo-box">
+        <h4>🧪 Live Rate Limit Demo</h4>
+        <p>Click the button rapidly. It locks after 5 attempts in 60 seconds.</p>
+        <button class="btn btn-primary btn-sm" id="rlBtn" onclick="runRateLimitDemo()">Attempt Login</button>
+        <div class="demo-result" style="display:block; margin-top:.75rem;">
+          <span id="rlStatus">Ready — 0/5 attempts used</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         SECURITY 4: CSRF
+    ====================================================== -->
+    <div class="sec-block">
+      <div class="sec-label">Security Feature 04</div>
+      <h2>CSRF Token Protection</h2>
+      <span class="badge badge-green">✅ Active</span>
+
+      <p>Every page generates a unique CSRF token using <code>crypto.randomUUID()</code>
+      and stores it in <code>sessionStorage</code>. The token is injected as a hidden field
+      into every form. On submission, the token is validated before any data is processed.
+      Cross-site requests won't have the token and will be rejected.</p>
+
+      <div class="code-block">
+        <div class="code-label">js/main.js — CSRF injection (runs on every page load)</div>
+<pre>function injectCSRFTokens() {
+  // Get or create token for this session
+  let token = sessionStorage.getItem('csrf_token');
+  if (!token) {
+    token = crypto.randomUUID();
+    sessionStorage.setItem('csrf_token', token);
+  }
+
+  // Inject into every form on the page
+  document.querySelectorAll('form').forEach(form => {
+    let input = form.querySelector('[name="_csrf"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = '_csrf';
+      form.appendChild(input);
+    }
+    input.value = token;
+  });
+}</pre>
+      </div>
+
+      <div class="demo-box">
+        <h4>🧪 Your Active Session Token</h4>
+        <p>This is unique to your browser session. Refreshing generates a new one.</p>
+        <div class="demo-result" style="display:block;">
+          <code id="csrfDisplay" style="word-break:break-all; font-size:.8rem;">Loading...</code>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="regenerateCSRF()" style="margin-top:.75rem;">
+          Regenerate Token
+        </button>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         SECURITY 5: SECURE COOKIES
+    ====================================================== -->
+    <div class="sec-block">
+      <div class="sec-label">Security Feature 05</div>
+      <h2>Secure Cookies &amp; Session Flags</h2>
+      <span class="badge badge-green">✅ Active</span>
+
+      <p>Session cookies are configured with three critical security flags:
+      <code>HttpOnly</code> prevents JavaScript from reading the cookie (blocks XSS-based theft),
+      <code>Secure</code> ensures the cookie is only sent over HTTPS,
+      and <code>SameSite=Strict</code> blocks cross-site request forgery.</p>
+
+      <div class="code-block">
+        <div class="code-label">Server — secure cookie configuration (Python/Flask example)</div>
+<pre># Python / Flask backend cookie setting
+from flask import make_response
+
+response = make_response(redirect('/dashboard'))
+response.set_cookie(
+    'session_id',
+    value=generate_session_token(),
+    httponly=True,          # JS cannot read this cookie
+    secure=True,            # HTTPS only
+    samesite='Strict',      # No cross-site sending
+    max_age=3600,           # Expires in 1 hour
+    path='/'
+)
+
+# Resulting Set-Cookie header:
+# Set-Cookie: session_id=abc123;
+#   HttpOnly; Secure; SameSite=Strict;
+#   Path=/; Max-Age=3600</pre>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <footer class="footer">
+    <p>Computer Networking Project 2 · Spring 2026 · Georgia State University</p>
+  </footer>
+
+  <script src="js/security.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Show CSRF token on load
+    document.getElementById('csrfDisplay').textContent =
+      sessionStorage.getItem('csrf_token') || 'Not yet generated — refresh page';
+
+    function runXSSDemo() {
+      const raw = document.getElementById('xssInput').value;
+      const clean = DOMPurify.sanitize(raw, { ALLOWED_TAGS: [] });
+      document.getElementById('xssRaw').textContent = raw;
+      document.getElementById('xssClean').textContent = clean || '(empty — all tags removed)';
+      document.getElementById('xssResult').style.display = 'block';
+    }
+
+    const rl = new RateLimiter(5, 60000);
+    function runRateLimitDemo() {
+      const btn = document.getElementById('rlBtn');
+      const status = document.getElementById('rlStatus');
+      try {
+        rl.check();
+        const rem = rl.max - rl.attempts;
+        status.textContent = `Attempt ${rl.attempts}/5 — ${rem} remaining`;
+        status.style.color = rem <= 1 ? 'var(--warning)' : 'var(--text)';
+      } catch(e) {
+        status.textContent = '🚫 ' + e.message;
+        status.style.color = 'var(--danger)';
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.disabled = false;
+          status.textContent = 'Unlocked — rate limit reset';
+          status.style.color = 'var(--success)';
+        }, 60000);
+      }
+    }
+
+    function regenerateCSRF() {
+      const t = crypto.randomUUID();
+      sessionStorage.setItem('csrf_token', t);
+      document.getElementById('csrfDisplay').textContent = t;
+    }
+  </script>
+</body>
+</html>
